@@ -1,0 +1,40 @@
+<div class="h-full p-6 bg-primary text-slate-100">
+	<div class="max-w-2xl rounded-xl border border-slate-700 bg-sidebar p-6">
+		<h2 class="text-xl font-semibold">Cargar Documentos</h2>
+		<p class="mt-1 text-slate-300">Sube tus archivos para que el asistente pueda consultarlos.</p>
+
+		<div class="mt-6 space-y-3">
+			<input
+				type="file"
+				(change)="onFileSelected($event)"
+				class="block w-full rounded-md border border-slate-600 bg-primary px-3 py-2 text-sm text-slate-200"
+			/>
+
+			@if (selectedFile) {
+				<div class="text-sm text-slate-300">
+					Archivo seleccionado: <span class="text-slate-100 font-medium">{{ selectedFile.name }}</span>
+				</div>
+			}
+
+			<button
+				(click)="upload()"
+				[disabled]="!selectedFile || isUploading"
+				class="rounded-md bg-accent px-4 py-2 font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				@if (isUploading) {
+					Cargando...
+				} @else {
+					Subir Archivo
+				}
+			</button>
+
+			@if (successMessage) {
+				<p class="text-sm text-emerald-400">{{ successMessage }}</p>
+			}
+
+			@if (errorMessage) {
+				<p class="text-sm text-rose-400">{{ errorMessage }}</p>
+			}
+		</div>
+	</div>
+</div>

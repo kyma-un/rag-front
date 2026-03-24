@@ -1,0 +1,45 @@
+<div class="h-full p-6 bg-primary text-slate-100">
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-xl font-semibold">Documentos Cargados</h2>
+    <button
+      (click)="loadDocuments()"
+      [disabled]="isLoading"
+      class="rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Actualizar
+    </button>
+  </div>
+
+  @if (isLoading) {
+    <div class="rounded-lg border border-slate-700 bg-sidebar p-4 text-slate-300">Cargando documentos...</div>
+  } @else if (errorMessage) {
+    <div class="rounded-lg border border-rose-700 bg-rose-950/30 p-4 text-rose-300">{{ errorMessage }}</div>
+  } @else if (documents.length === 0) {
+    <div class="rounded-lg border border-slate-700 bg-sidebar p-4 text-slate-300">No hay documentos cargados.</div>
+  } @else {
+    <div class="overflow-hidden rounded-xl border border-slate-700 bg-sidebar">
+      <table class="min-w-full text-left text-sm">
+        <thead class="bg-navbar text-slate-200">
+          <tr>
+            <th class="px-4 py-3">Nombre</th>
+            <th class="px-4 py-3">Tamano</th>
+            <th class="px-4 py-3">Estado</th>
+            <th class="px-4 py-3">Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (doc of documents; track $index) {
+            <tr class="border-t border-slate-700">
+              <td class="px-4 py-3">{{ doc.filename }}</td>
+              <td class="px-4 py-3 text-slate-300">{{ formatBytes(doc.size) }}</td>
+              <td class="px-4 py-3">
+                <span class="rounded-full bg-accent/20 px-2 py-1 text-xs font-medium text-accent">{{ doc.status || 'Procesado' }}</span>
+              </td>
+              <td class="px-4 py-3 text-slate-300">{{ doc.uploadedAt || 'N/A' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
