@@ -1,59 +1,120 @@
-# RagChatbot
+# RAG Chatbot (Frontend)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.3.
+Interfaz web construida con Angular para chatear con un asistente RAG, subir documentos y consultar los archivos cargados.
 
-## Development server
+## Tecnologias
 
-To start a local development server, run:
+- Angular 21
+- TypeScript
+- Tailwind CSS
+- Vitest (tests unitarios)
 
-```bash
-ng serve
-```
+## Caracteristicas
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Chat con el asistente (ruta `/chat`)
+- Carga de documentos al backend (ruta `/upload`)
+- Listado de documentos cargados (ruta `/documents`)
+- Layout con navbar + sidebar para navegacion rapida
 
-## Code scaffolding
+## Requisitos previos
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- Node.js 20+ (recomendado LTS)
+- npm 10+
+- Backend RAG corriendo en `http://localhost:8000`
 
-```bash
-ng generate component component-name
-```
+> Importante: este frontend consume un backend HTTP. Si el backend no esta activo, el chat y la carga/listado de documentos fallaran.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Instalacion
 
 ```bash
-ng build
+npm install
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Ejecucion en desarrollo
 
 ```bash
-ng test
+npm start
 ```
 
-## Running end-to-end tests
+Abre tu navegador en:
 
-For end-to-end (e2e) testing, run:
+`http://localhost:4200`
+
+## Scripts utiles
 
 ```bash
-ng e2e
+# Levantar servidor de desarrollo
+npm start
+
+# Build de produccion
+npm run build
+
+# Build en modo watch
+npm run watch
+
+# Tests unitarios
+npm test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Configuracion del backend
 
-## Additional Resources
+La URL base del backend se define en:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- `src/app/services/api.ts`
+
+Actualmente:
+
+```ts
+private apiUrl = 'http://localhost:8000';
+```
+
+Si tu backend corre en otro host/puerto, cambia ese valor.
+
+### Endpoints esperados por el frontend
+
+- `POST /ask` con body `{ question: string }`
+- `GET /documents`
+- `POST /documents/upload` (multipart/form-data, campo `file`)
+
+## Flujo recomendado de uso
+
+1. Inicia el backend RAG.
+2. Ejecuta este frontend con `npm start`.
+3. Entra a `/upload` y sube documentos.
+4. Verifica en `/documents` que se hayan indexado.
+5. Consulta en `/chat`.
+
+## Estructura del proyecto
+
+```text
+src/
+	app/
+		components/
+			chat/
+			documents/
+			upload/
+		layout/
+			navbar/
+			sidebar/
+		services/
+			api.ts
+```
+
+## Solucion de problemas
+
+- Error al chatear o subir archivos:
+	- Verifica que el backend este activo en `http://localhost:8000`.
+- CORS bloqueado en navegador:
+	- Habilita CORS en el backend para `http://localhost:4200`.
+- Cambios no se reflejan:
+	- Reinicia `npm start` y limpia cache del navegador.
+
+## Deploy
+
+Genera build de produccion:
+
+```bash
+npm run build
+```
+
+Los archivos finales se generan en `dist/` para desplegar en cualquier hosting estatico.
