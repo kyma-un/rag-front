@@ -1,61 +1,48 @@
-import { ChangeDetectorRef, Component, NgZone } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Api } from '../../services/api';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-upload',
-  imports: [CommonModule],
   templateUrl: './upload.html',
   styleUrl: './upload.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Upload {
-  selectedFile: File | null = null;
-  isUploading = false;
-  successMessage = '';
-  errorMessage = '';
+  private readonly api = inject(Api);
 
-  constructor(
-    private api: Api,
-    private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
-  ) {}
+  readonly selectedFile = signal<File | null>(null);
+  readonly isUploading = signal(false);
+  readonly successMessage = signal('');
+  readonly errorMessage = signal('');
 
   onFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement;
-    this.selectedFile = target.files?.[0] ?? null;
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.selectedFile.set(target.files?.[0] ?? null);
+    this.successMessage.set('');
+    this.errorMessage.set('');
   }
 
-  upload(): void {
-    if (!this.selectedFile || this.isUploading) {
+  upload(fileInput: HTMLInputElement): void {
+    const file = this.selectedFile();
+
+    if (!file || this.isUploading()) {
       return;
     }
 
-    this.isUploading = true;
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.isUploading.set(true);
+    this.successMessage.set('');
+    this.errorMessage.set('');
 
-    this.api.uploadDocument(this.selectedFile).subscribe({
-      next: () => {
-        this.ngZone.run(() => {
-          this.successMessage = `Archivo "${this.selectedFile?.name}" cargado correctamente.`;
-          this.selectedFile = null;
-          this.cdr.detectChanges();
-        });
+    this.api.uploadDocument(file).subscribe({
+      next: (response) => {
+        this.successMessage.set(response.message ?? `Archivo "${file.name}" cargado correctamente.`);
+        this.selectedFile.set(null);
+        fileInput.value = '';
+        this.isUploading.set(false);
       },
       error: () => {
-        this.ngZone.run(() => {
-          this.errorMessage = 'No se pudo cargar el archivo. Revisa que el backend este disponible.';
-          this.isUploading = false;
-          this.cdr.detectChanges();
-        });
-      },
-      complete: () => {
-        this.ngZone.run(() => {
-          this.isUploading = false;
-          this.cdr.detectChanges();
-        });
+        this.errorMessage.set('No se pudo cargar el archivo. Revisa que el backend este disponible.');
+        this.isUploading.set(false);
       }
     });
   }

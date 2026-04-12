@@ -1,6 +1,6 @@
 # RAG Chatbot (Frontend)
 
-Interfaz web construida con Angular para chatear con un asistente RAG, subir documentos y consultar los archivos cargados.
+Interfaz web construida con Angular para chatear con un asistente RAG, subir PDFs, consultar documentos y gestionar fuentes multi-source.
 
 ## Tecnologias
 
@@ -11,9 +11,9 @@ Interfaz web construida con Angular para chatear con un asistente RAG, subir doc
 
 ## Caracteristicas
 
-- Chat con el asistente (ruta `/chat`)
-- Carga de documentos al backend (ruta `/upload`)
-- Listado de documentos cargados (ruta `/documents`)
+- Chat con el asistente con modo manual o automatico (ruta `/chat`)
+- Carga individual de PDFs al backend (ruta `/upload`)
+- Estado de documentos, fuentes soportadas e ingesta por fuentes (ruta `/documents`)
 - Layout con navbar + sidebar para navegacion rapida
 
 ## Requisitos previos
@@ -72,9 +72,11 @@ Si tu backend corre en otro host/puerto, cambia ese valor.
 
 ### Endpoints esperados por el frontend
 
-- `POST /ask` con body `{ question: string }`
+- `POST /ask` con body `{ question, mode, sources, k }`
+- `GET /sources`
 - `GET /documents`
 - `POST /documents/upload` (multipart/form-data, campo `file`)
+- `POST /documents/ingest-sources` con body `{ sources }`
 
 ## Flujo recomendado de uso
 

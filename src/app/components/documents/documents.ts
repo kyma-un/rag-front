@@ -1,44 +1,83 @@
-import { ChangeDetectorRef, Component, NgZone } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Api, DocumentItem } from '../../services/api';
 
 @Component({
   selector: 'app-documents',
-  imports: [CommonModule],
   templateUrl: './documents.html',
   styleUrl: './documents.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Documents {
-  documents: DocumentItem[] = [];
-  isLoading = false;
-  errorMessage = '';
+export class Documents implements OnInit {
+  private readonly api = inject(Api);
 
-  constructor(
-    private api: Api,
-    private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
-  ) {
+  readonly documents = signal<DocumentItem[]>([]);
+  readonly supportedSources = signal<string[]>([]);
+  readonly indexedSources = signal<string[]>([]);
+  readonly isLoadingDocuments = signal(false);
+  readonly isLoadingSources = signal(false);
+  readonly errorMessage = signal('');
+  readonly sourceErrorMessage = signal('');
+  readonly ingestMessage = signal('');
+  readonly ingestErrorMessage = signal('');
+  readonly ingestTarget = signal<string | null>(null);
+
+  ngOnInit(): void {
     this.loadDocuments();
+    this.loadSources();
   }
 
   loadDocuments(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoadingDocuments.set(true);
+    this.errorMessage.set('');
 
     this.api.getDocuments().subscribe({
       next: (docs) => {
-        this.ngZone.run(() => {
-          this.documents = docs;
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        });
+        this.documents.set(docs);
+        this.isLoadingDocuments.set(false);
       },
       error: () => {
-        this.ngZone.run(() => {
-          this.errorMessage = 'No se pudo obtener la lista de documentos.';
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        });
+        this.errorMessage.set('No se pudo obtener la lista de documentos.');
+        this.isLoadingDocuments.set(false);
+      },
+    });
+  }
+
+  loadSources(): void {
+    this.isLoadingSources.set(true);
+    this.sourceErrorMessage.set('');
+
+    this.api.getSources().subscribe({
+      next: (sources) => {
+        this.supportedSources.set(sources.supported_sources);
+        this.indexedSources.set(sources.indexed_sources);
+        this.isLoadingSources.set(false);
+      },
+      error: () => {
+        this.sourceErrorMessage.set('No se pudieron obtener las fuentes disponibles.');
+        this.isLoadingSources.set(false);
+      },
+    });
+  }
+
+  ingestSources(sources: string[] | null): void {
+    if (this.ingestTarget() !== null) {
+      return;
+    }
+
+    this.ingestTarget.set(sources === null ? 'all' : sources.join(', '));
+    this.ingestMessage.set('');
+    this.ingestErrorMessage.set('');
+
+    this.api.ingestSources({ sources }).subscribe({
+      next: (response) => {
+        this.ingestMessage.set(response.message ?? 'Ingesta solicitada correctamente.');
+        this.ingestTarget.set(null);
+        this.loadDocuments();
+        this.loadSources();
+      },
+      error: () => {
+        this.ingestErrorMessage.set('No se pudo iniciar la ingesta de fuentes.');
+        this.ingestTarget.set(null);
       },
     });
   }

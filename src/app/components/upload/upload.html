@@ -1,39 +1,47 @@
-<div class="h-full p-6 bg-primary text-slate-100">
-	<div class="max-w-2xl rounded-xl border border-slate-700 bg-sidebar p-6">
-		<h2 class="text-xl font-semibold">Cargar Documentos</h2>
-		<p class="mt-1 text-slate-300">Sube tus archivos para que el asistente pueda consultarlos.</p>
+<div class="h-full overflow-y-auto bg-primary px-6 py-6 text-slate-100">
+	<div class="mx-auto max-w-3xl rounded-3xl border border-slate-700 bg-sidebar/80 p-6 shadow-lg shadow-slate-950/20">
+		<p class="text-xs uppercase tracking-[0.25em] text-slate-400">Carga individual</p>
+		<h2 class="mt-1 text-2xl font-semibold text-white">Subir PDF</h2>
+		<p class="mt-2 text-sm text-slate-300">Mantén esta ruta para subir un archivo PDF de forma manual al backend.</p>
 
-		<div class="mt-6 space-y-3">
+		<div class="mt-6 space-y-4">
 			<input
+				#fileInput
 				type="file"
+				accept="application/pdf"
 				(change)="onFileSelected($event)"
-				class="block w-full rounded-md border border-slate-600 bg-primary px-3 py-2 text-sm text-slate-200"
+				class="block w-full rounded-2xl border border-slate-600 bg-primary px-3 py-2 text-sm text-slate-200 file:mr-4 file:rounded-full file:border-0 file:bg-accent file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
 			/>
 
-			@if (selectedFile) {
-				<div class="text-sm text-slate-300">
-					Archivo seleccionado: <span class="text-slate-100 font-medium">{{ selectedFile.name }}</span>
+			@if (selectedFile()) {
+				<div class="rounded-2xl border border-slate-700 bg-primary/60 px-4 py-3 text-sm text-slate-300">
+					Archivo seleccionado: <span class="font-medium text-slate-100">{{ selectedFile()?.name }}</span>
 				</div>
 			}
 
-			<button
-				(click)="upload()"
-				[disabled]="!selectedFile || isUploading"
-				class="rounded-md bg-accent px-4 py-2 font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-			>
-				@if (isUploading) {
-					Cargando...
-				} @else {
-					Subir Archivo
-				}
-			</button>
+			<div class="flex items-center gap-3">
+				<button
+					type="button"
+					(click)="upload(fileInput)"
+					[disabled]="!selectedFile() || isUploading()"
+					class="rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					@if (isUploading()) {
+						Cargando...
+					} @else {
+						Subir archivo
+					}
+				</button>
 
-			@if (successMessage) {
-				<p class="text-sm text-emerald-400">{{ successMessage }}</p>
+				<span class="text-sm text-slate-400">Se enviará como multipart/form-data al endpoint /documents/upload.</span>
+			</div>
+
+			@if (successMessage()) {
+				<p class="rounded-2xl border border-emerald-700 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">{{ successMessage() }}</p>
 			}
 
-			@if (errorMessage) {
-				<p class="text-sm text-rose-400">{{ errorMessage }}</p>
+			@if (errorMessage()) {
+				<p class="rounded-2xl border border-rose-700 bg-rose-950/40 px-4 py-3 text-sm text-rose-300">{{ errorMessage() }}</p>
 			}
 		</div>
 	</div>
