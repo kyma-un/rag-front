@@ -2,6 +2,10 @@
 
 Frontend Angular 21 preparado para produccion en Docker, compatible con reverse proxy y backend RAG publicado en `/api`.
 
+## Guia rapida
+
+- Flujo completo Front + Back en Docker: [GUIA_BACK_FRONT_DOCKER.md](GUIA_BACK_FRONT_DOCKER.md)
+
 ## Stack
 
 - Angular 21
