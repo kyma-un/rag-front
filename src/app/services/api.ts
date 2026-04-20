@@ -2,6 +2,25 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 
+interface RuntimeEnv {
+  API_BASE_URL?: string;
+}
+
+function normalizeBaseUrl(value?: string): string {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return '/api';
+  }
+
+  return normalizedValue.endsWith('/') ? normalizedValue.slice(0, -1) : normalizedValue;
+}
+
+function getApiBaseUrl(): string {
+  const runtimeConfig = globalThis as typeof globalThis & { __env?: RuntimeEnv };
+  return normalizeBaseUrl(runtimeConfig.__env?.API_BASE_URL);
+}
+
 export type RagMode = 'manual' | 'auto';
 
 export interface AskRequest {
@@ -61,7 +80,7 @@ interface IngestSourcesResponse {
   providedIn: 'root',
 })
 export class Api {
-  private apiUrl = 'http://localhost:8000'; // Cambia esto a la URL de tu backend
+  private readonly apiUrl = getApiBaseUrl();
   private readonly http = inject(HttpClient);
   
   query(body: AskRequest): Observable<AskResponse> {

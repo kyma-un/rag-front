@@ -1,122 +1,103 @@
-# RAG Chatbot (Frontend)
+# RAG Chatbot Frontend
 
-Interfaz web construida con Angular para chatear con un asistente RAG, subir PDFs, consultar documentos y gestionar fuentes multi-source.
+Frontend Angular 21 preparado para produccion en Docker, compatible con reverse proxy y backend RAG publicado en `/api`.
 
-## Tecnologias
+## Stack
 
 - Angular 21
 - TypeScript
 - Tailwind CSS
-- Vitest (tests unitarios)
+- Nginx (runtime de produccion)
 
-## Caracteristicas
+## Objetivo de despliegue
 
-- Chat con el asistente con modo manual o automatico (ruta `/chat`)
-- Carga individual de PDFs al backend (ruta `/upload`)
-- Estado de documentos, fuentes soportadas e ingesta por fuentes (ruta `/documents`)
-- Layout con navbar + sidebar para navegacion rapida
+- Frontend servido en `/`
+- Backend RAG servido en `/api`
+- Mismo origen en produccion (sin cross-domain)
 
-## Requisitos previos
+## Configuracion de API base URL
 
-- Node.js 20+ (recomendado LTS)
-- npm 10+
-- Backend RAG corriendo en `http://localhost:8000`
+El frontend toma la base URL de API desde `env-config.js` en runtime:
 
-> Importante: este frontend consume un backend HTTP. Si el backend no esta activo, el chat y la carga/listado de documentos fallaran.
+- Archivo fuente: `public/env-config.js`
+- Cargado en: `src/index.html`
+- Consumo en cliente HTTP: `src/app/services/api.ts`
 
-## Instalacion
+Regla de fallback:
+
+- Si no hay valor configurado: usa `/api`
+
+En produccion Docker, `env-config.js` se genera al arrancar el contenedor con la variable `API_BASE_URL`.
+
+## Desarrollo local
+
+Instalacion:
 
 ```bash
 npm install
 ```
 
-## Ejecucion en desarrollo
+Ejecucion:
 
 ```bash
 npm start
 ```
 
-Abre tu navegador en:
+`npm start` usa `proxy.conf.json`, por lo que llamadas a `/api/*` se proxyean a `http://localhost:8000`.
 
-`http://localhost:4200`
+App local:
+
+- `http://localhost:4200`
+
+## Docker de produccion
+
+Build local de imagen:
+
+```bash
+docker build -t chatbot-frontend:local .
+```
+
+Run local (modo compatible con reverse proxy, API relativa):
+
+```bash
+docker run --rm -p 8080:80 --name chatbot-frontend chatbot-frontend:local
+```
+
+Run local con API explicita (por ejemplo pruebas fuera de proxy unico):
+
+```bash
+docker run --rm -p 8080:80 -e API_BASE_URL=http://host.docker.internal:8000/api --name chatbot-frontend chatbot-frontend:local
+```
+
+Healthcheck expuesto en:
+
+- `GET /healthz`
+
+## Integracion con compose del backend
+
+En tu entorno del backend (donde ya existe `FRONTEND_IMAGE`), usa:
+
+```env
+FRONTEND_IMAGE=chatbot-frontend:local
+```
+
+Luego levanta el compose del backend con su flujo habitual. El servicio frontend consumira esa imagen y seguira llamando al backend via `/api`.
+
+## Endpoints consumidos por el frontend
+
+Con `API_BASE_URL=/api`, el cliente usa:
+
+- `POST /api/ask`
+- `GET /api/sources`
+- `GET /api/documents`
+- `POST /api/documents/upload`
+- `POST /api/documents/ingest-sources`
 
 ## Scripts utiles
 
 ```bash
-# Levantar servidor de desarrollo
 npm start
-
-# Build de produccion
 npm run build
-
-# Build en modo watch
 npm run watch
-
-# Tests unitarios
 npm test
 ```
-
-## Configuracion del backend
-
-La URL base del backend se define en:
-
-- `src/app/services/api.ts`
-
-Actualmente:
-
-```ts
-private apiUrl = 'http://localhost:8000';
-```
-
-Si tu backend corre en otro host/puerto, cambia ese valor.
-
-### Endpoints esperados por el frontend
-
-- `POST /ask` con body `{ question, mode, sources, k }`
-- `GET /sources`
-- `GET /documents`
-- `POST /documents/upload` (multipart/form-data, campo `file`)
-- `POST /documents/ingest-sources` con body `{ sources }`
-
-## Flujo recomendado de uso
-
-1. Inicia el backend RAG.
-2. Ejecuta este frontend con `npm start`.
-3. Entra a `/upload` y sube documentos.
-4. Verifica en `/documents` que se hayan indexado.
-5. Consulta en `/chat`.
-
-## Estructura del proyecto
-
-```text
-src/
-	app/
-		components/
-			chat/
-			documents/
-			upload/
-		layout/
-			navbar/
-			sidebar/
-		services/
-			api.ts
-```
-
-## Solucion de problemas
-
-- Error al chatear o subir archivos:
-	- Verifica que el backend este activo en `http://localhost:8000`.
-- CORS bloqueado en navegador:
-	- Habilita CORS en el backend para `http://localhost:4200`.
-- Cambios no se reflejan:
-	- Reinicia `npm start` y limpia cache del navegador.
-
-## Deploy
-
-Genera build de produccion:
-
-```bash
-npm run build
-```
-
-Los archivos finales se generan en `dist/` para desplegar en cualquier hosting estatico.
